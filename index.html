@@ -27,7 +27,7 @@ function show(){
 }
 node.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){tab=b.dataset.tab;show();scrollTo(0,0)}});
 (async()=>{
- const match=location.hash.match(/(?:^#|&)k=([^&]+)/);
+ const match=location.hash.match(/(?:^#|&)k=([A-Za-z0-9_-]+)/);
  if(!match){locked('Данные не публикуются открыто. Нужна персональная ссылка с ключом доступа.');return}
  try{
   const key=await crypto.subtle.importKey('raw',from64(match[1]),{name:'AES-GCM'},false,['decrypt']);
