@@ -43,11 +43,8 @@ const siteLinks=p=>{
  if(!p)return '';
  let s='<div class="program-links">';
  if(p.siteUrl&&/^https:\/\//i.test(p.siteUrl)){
-   s+='<a class="site-link verified" target="_blank" rel="noreferrer noopener" href="'+esc(p.siteUrl)+'">Открыть сайт программы ↗</a>';
+   s+='<a class="site-link verified" target="_blank" rel="noreferrer noopener" href="'+esc(p.siteUrl)+'">'+(p.code==='ЛС'?'Сайт «Лидер лидеров» ↗':'Открыть сайт программы ↗')+'</a>';
    if(p.siteNote&&p.siteNote.includes('вход'))s+='<span class="site-note">Требуется вход через ChatGPT</span>';
- }else if(p.relatedSiteUrl&&/^https:\/\//i.test(p.relatedSiteUrl)){
-   s+='<a class="site-link" target="_blank" rel="noreferrer noopener" href="'+esc(p.relatedSiteUrl)+'">Смежная студия «Лидер лидеров» ↗</a>';
-   s+='<span class="site-note">Отдельный сайт ЛС не установлен; соответствие программ не подтверждено</span>';
  }else{
    s+='<span class="site-missing">Отдельная ссылка на сайт пока не найдена</span>';
  }
