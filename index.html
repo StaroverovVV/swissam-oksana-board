@@ -13,6 +13,11 @@
 
 .day-tabs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:17px}.day-tabs button{border:1px solid #d7e2ef;border-radius:9px;background:#fff;padding:9px 14px;color:#4a678e;font-size:12px;font-weight:750}.day-tabs button.active{border-color:#1e416c;background:#1e416c;color:#fff}.day-tabs span{font-size:11px;color:#8496ac;margin-left:auto}.archive-source{background:#fff;border:1px solid #eadfc8;border-left:3px solid #bf9b61;border-radius:10px;padding:13px 18px;margin:14px 0 19px;color:#4a5f7b}.archive-source strong{font-size:13px}.archive-source p{font-size:12px;margin:5px 0 0;color:#8190a8;line-height:1.6}
 @media(max-width:690px){.day-tabs span{margin-left:0;width:100%;padding-top:2px}}
+
+.audit-overview{background:#fff;border:1px solid #dde6f1;border-radius:13px;padding:23px;margin:20px 0 26px}.audit-heading{margin-bottom:15px}.audit-heading h2{font-size:21px;font-weight:750;letter-spacing:-.02em;margin:0 0 4px}.audit-heading h3{font-size:16px;font-weight:750;margin:0}.audit-heading p{font-size:12px;color:#7b8ca5;line-height:1.6;margin:0}.audit-triple{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:18px}.audit-triple span{background:#f4f7fb;border:1px solid #e7edf5;padding:13px 12px;border-radius:9px;font-size:12px;color:#61748f}.audit-triple b{font-size:24px;font-weight:750;color:#243d5f;margin-right:6px}.audit-closed{display:grid;grid-template-columns:1fr 1fr;gap:9px}.audit-record{display:flex;align-items:flex-start;gap:10px;background:#f9fbfd;border:1px solid #e9eff6;border-radius:9px;text-align:left;padding:11px}.audit-record:hover,.audit-missing-row:hover{background:#edf4fc}.audit-project{background:#f1eadb;color:#937345;padding:4px 6px;font-weight:800;font-size:10px;border-radius:5px;white-space:nowrap}.audit-record-copy{display:grid;flex:1;gap:5px;min-width:0}.audit-record-copy b{font-size:12px;line-height:1.4;color:#2d4260}.audit-record-copy small{font-size:11px;color:#8c9db1}.audit-record-copy span{font-size:11px;color:#5b708c;line-height:1.5}.audit-arrow{color:#7590b3;font-size:13px}
+.audit-handoffs{display:grid;gap:8px}.audit-handoff{padding:12px 14px;border-radius:9px;border:1px solid #e1e9f2;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center;background:#fbfcfe}.audit-handoff>div:first-child{display:grid;gap:4px}.audit-handoff small{color:#a28653;font-size:10px;font-weight:750}.audit-handoff strong{font-size:12px;line-height:1.45}.audit-references{display:flex;flex-wrap:wrap;gap:5px;align-items:center}.audit-link{display:inline-flex;text-align:left;align-items:center;border:1px solid #cbd8e9;background:#f0f5fb;color:#285c92;padding:7px 9px;border-radius:7px;font-size:11px;font-weight:650;line-height:1.4;margin:3px 3px 3px 0}.audit-link:hover{background:#dce9f7}.audit-missing{display:grid;gap:7px}.audit-missing-row{display:flex;justify-content:space-between;align-items:center;gap:9px;border:1px solid #ebdfc9;background:#fffaf2;border-radius:9px;padding:11px 13px;text-align:left}.audit-missing-row span{font-size:12px;color:#514a3c}.audit-missing-row small{color:#a0844e;font-size:11px;white-space:nowrap}.audit-note{margin-top:18px;border-top:1px solid #e7edf4;padding-top:16px;font-size:12px;color:#72829c;line-height:1.8}.audit-note strong{color:#425773}.audit-evidence{font-size:11px;color:#7b8b9e;margin:9px 0}.audit-next{font-size:12px;line-height:1.6;margin-top:14px;border-top:1px solid #e3eaf2;padding-top:12px;color:#536782}.audit-pending{font-size:12px;line-height:1.65;margin-top:13px;background:#fff5e5;border-left:3px solid #d0aa62;padding:11px 13px;color:#896b38}
+@media(max-width:850px){.audit-closed{grid-template-columns:1fr}.audit-handoff{grid-template-columns:1fr}}@media(max-width:560px){.audit-overview{padding:16px}.audit-triple{grid-template-columns:1fr}.audit-missing-row{display:block}.audit-missing-row small{display:block;margin-top:8px}}
+
 </style></head><body>
 <div id="app"><div class="locked"><h1>Закрытая панель SWISSAM</h1><p>Подключаем защищённые данные…</p></div></div>
 <script>
@@ -55,8 +60,78 @@ function taskSummary(t){
  const label=prio(t);
  return '<summary><div class="task-summary-left"><span class="task-prio '+label.color+'">'+esc(label.name)+'</span><div class="task-name">'+esc(t.title)+'</div><span class="task-source">'+esc(t.project)+(t.due?' · Срок '+esc(t.due.split('-').reverse().join('.')):' · Срок не установлен')+'</span></div><span class="state '+esc(t.status)+'">'+esc(statusNames[t.status]||t.status)+'</span><span class="task-chevron">⌄</span></summary>';
 }
+
+const previousItems=()=>data.historyDays?.['2026-11-25']?.items||[];
+const previousTask=id=>previousItems().find(t=>t.id===id);
+const todayTask=id=>data.items.find(t=>t.id===id);
+function linkTo26(id){
+ const item=todayTask(id);
+ if(!item)return '';
+ return '<button class="audit-link" data-handoff="'+esc(id)+'">'+esc(item.title)+' ↗</button>';
+}
+function evidenceAndHandoff(t){
+ let html='';
+ if(archive()){
+  if(t.status==='done'){
+   html+='<p class="audit-evidence"><strong>Закрытое действие:</strong> '+esc(t.closureKind||'Рабочий этап')+'</p>';
+   if(t.evidenceNote)html+='<p class="audit-evidence">'+esc(t.evidenceNote)+'</p>';
+   const next=t.nextAfterClosure||[];
+   if(next.length){
+    html+='<div class="audit-next"><strong>Следующий этап (не то же самое, что перенос незакрытой задачи):</strong> ';
+    html+=next.map(id=>id.startsWith('y25-')?'<button data-task="'+esc(id)+'" class="audit-link">'+esc(previousTask(id)?.title||id)+' ↗</button>':linkTo26(id)).join(' ');
+    html+='</div>';
+   }
+  }else if(t.carryTo26?.length){
+   html+='<div class="audit-next"><strong>Продолжение в плане 26 ноября:</strong> '+t.carryTo26.map(linkTo26).join(' ')+'</div>';
+  }else{
+   html+='<div class="audit-pending"><strong>Открыто, но в плане 26 ноября нет отдельного пункта.</strong> Срок не указан, автоматического переноса не делал.</div>';
+  }
+ }else if(t.from25?.length){
+  html+='<div class="audit-next"><strong>Основание из 25 ноября:</strong> ';
+  html+=t.from25.map(id=>'<button data-backtask="'+esc(id)+'" class="audit-link">'+esc(previousTask(id)?.title||id)+' ↗</button>').join(' ');
+  html+='</div>';
+ }
+ return html;
+}
+function closureAndCarryReport(){
+ const items=previousItems();
+ const closed=items.filter(t=>t.status==='done');
+ const open=items.filter(t=>t.status!=='done');
+ const reflected=open.filter(t=>t.carryTo26?.some(id=>todayTask(id)));
+ const unlinked=open.filter(t=>!t.carryTo26?.some(id=>todayTask(id)));
+ const linkRow=t=>'<button data-task="'+esc(t.id)+'" class="audit-record"><span class="audit-project">'+esc(t.project)+'</span><span class="audit-record-copy"><b>'+esc(t.title)+'</b><small>'+esc(t.closureKind||'')+'</small><span>'+esc(t.result||'Результат в источниках не подтверждён')+'</span></span><span class="audit-arrow">↗</span></button>';
+ let out='<section class="audit-overview"><div class="audit-heading"><h2>Закрыто 25 ноября — с каким результатом</h2><p>Выполненное действие ≠ утверждённая программа или окончательное решение.</p></div>';
+ out+='<div class="audit-triple"><span><b>'+closed.length+'</b> закрыто как действие</span><span><b>'+items.filter(t=>t.status==='progress').length+'</b> в работе</span><span><b>'+items.filter(t=>t.status==='plan').length+'</b> открыты</span></div>';
+ out+='<div class="audit-closed">'+closed.map(linkRow).join('')+'</div>';
+ out+='<div class="audit-heading" style="margin-top:26px"><h2>Что перешло на 26 ноября</h2><p>Только совпадающие незавершённые задачи, не всякое продолжение темы.</p></div>';
+ out+='<div class="audit-handoffs">';
+ out+=reflected.map(t=>'<div class="audit-handoff"><div><small>'+esc(t.project)+' · '+esc(t.status==='progress'?'В работе':'Открыто')+'</small><strong>'+esc(t.title)+'</strong></div><div class="audit-references">'+t.carryTo26.map(linkTo26).join('')+'</div></div>').join('');
+ out+='</div>';
+ out+='<div class="audit-heading" style="margin-top:24px"><h2>Осталось открытым — нет отдельной задачи на 26 ноября</h2></div>';
+ out+='<div class="audit-missing">'+unlinked.map(t=>'<button class="audit-missing-row" data-task="'+esc(t.id)+'"><span><b>'+esc(t.project)+'</b> · '+esc(t.title)+'</span><small>Перенос не подтверждён ↗</small></button>').join('')+'</div>';
+ const newSteps=[
+  ['y25-sales-rena','sales-rena'],
+  ['y25-market-rotation','marketing-schedule']
+ ];
+ out+='<div class="audit-note"><strong>Не перенос, а следующий шаг после закрытого действия:</strong> ';
+ out+=newSteps.map(([from,to])=>esc(previousTask(from)?.title||'')+' → '+linkTo26(to)).join(' · ');
+ out+='</div></section>';
+ return out;
+}
+function carryFromYesterday(){
+ const prev=previousItems().filter(t=>t.status!=='done');
+ const represented=prev.filter(t=>t.carryTo26?.some(id=>todayTask(id)));
+ const notIncluded=prev.filter(t=>!t.carryTo26?.some(id=>todayTask(id)));
+ let s='<section class="audit-overview"><div class="audit-heading"><h2>Переход с 25 на 26 ноября</h2><p>5 открытых задач отражены в плане 26 ноября. Ещё 2 не перенесены отдельными пунктами.</p></div>';
+ s+='<div class="audit-handoffs">'+represented.map(t=>'<div class="audit-handoff"><div><small>'+esc(t.project)+'</small><strong>'+esc(t.title)+'</strong></div><div class="audit-references">'+t.carryTo26.map(linkTo26).join('')+'</div></div>').join('')+'</div>';
+ s+='<div class="audit-heading" style="margin-top:20px"><h3>Открыто, но в сегодняшнем плане не отражено</h3></div>';
+ s+='<div class="audit-missing">'+notIncluded.map(t=>'<button class="audit-missing-row" data-backtask="'+esc(t.id)+'"><span><b>'+esc(t.project)+'</b> · '+esc(t.title)+'</span><small>Срок не назначен ↗</small></button>').join('')+'</div>';
+ s+='<div class="audit-note">Встреча с Реной 26 ноября и согласование календаря Маркетинга — следующие действия после закрытых 25 ноября контакта и обсуждения, а не перенос незавершённой задачи.</div>';
+ s+='</section>';
+ return s;
+}
 function taskDetail(t){
- return '<details class="task" id="task-'+esc(t.id)+'" '+(selectedTask===t.id?'open':'')+'>'+taskSummary(t)+'<div class="task-body"><p>'+esc(t.detail)+'</p><div class="task-origin"><strong>Основание:</strong> '+esc(t.source||'Рабочий план ДПО')+'</div><div class="task-result"><strong>Фактический результат</strong><p>'+esc(t.result||'Не подтверждён')+'</p></div></div></details>'
+ return '<details class="task" id="task-'+esc(t.id)+'" '+(selectedTask===t.id?'open':'')+'>'+taskSummary(t)+'<div class="task-body"><p>'+esc(t.detail)+'</p><div class="task-origin"><strong>Основание:</strong> '+esc(t.source||'Рабочий план ДПО')+'</div><div class="task-result"><strong>Фактический результат</strong><p>'+esc(t.result||'Не подтверждён')+'</p></div>'+evidenceAndHandoff(t)+'</div></details>'
 }
 function groupedTasks(items){
  const groups=lanes.map(l=>({lane:l,items:items.filter(t=>prio(t).id===l.id)}));
@@ -86,6 +161,7 @@ function show(){
  const stats=archive()?[['ПРОЕКТА',data.projects.length],['ЗАДАЧИ',dayItems().length],['ЗАФИКСИРОВАНО',dayItems().filter(t=>t.status==='done').length],['ОТКРЫТО',dayItems().filter(active).length]]:[['ПРОЕКТА',data.projects.length],['ЗАДАЧИ',dayItems().length],['ВАЖНО И СРОЧНО',dayItems().filter(t=>t.lane==='urgent'&&active(t)).length],['ТРЕБУЕТ ВНИМАНИЯ',dayItems().filter(t=>t.lane==='attention'&&active(t)).length]];
  s+='<div class="kpis">'+stats.map(x=>'<div class="kpi"><span>'+esc(x[0])+'</span><b>'+String(x[1]).padStart(2,'0')+'</b></div>').join('')+'</div>';
  if(archive()&&tab==='Обзор')s+='<div class="archive-source"><strong>Восстановлено по источникам за 25 ноября</strong><p>'+esc(data.historyDays?.['2026-11-25']?.source_note||'Статусы сформированы по подтверждённым действиям и открытым задачам.')+'</p></div>';
+ if(tab==='Обзор')s+=archive()?closureAndCarryReport():carryFromYesterday();
  if(tab==='Обзор'){
   s+=priorityBoard(true);
   s+='<div class="section"><h2>Программы ДПО</h2><span>Нажмите программу, чтобы увидеть задачи</span></div><div class="cards">'+data.projects.map(projectCard).join('')+'</div>';
@@ -109,6 +185,10 @@ function show(){
  if(selectedTask){const details=document.getElementById('task-'+selectedTask);if(details){details.open=true;details.scrollIntoView({behavior:'smooth',block:'center'})}}
 }
 node.addEventListener('click',e=>{
+ const jump=e.target.closest('[data-handoff]');
+ if(jump){const item=todayTask(jump.dataset.handoff);if(!item)return;day='2026-11-26';tab=['Продажи','HM','ДПО'].includes(item.project)?'Встречи':item.project;selectedTask=item.id;show();return}
+ const back=e.target.closest('[data-backtask]');
+ if(back){const item=previousTask(back.dataset.backtask);if(!item)return;day='2026-11-25';tab=['Продажи','HM','ДПО'].includes(item.project)?'Встречи':item.project;selectedTask=item.id;show();return}
  const dayButton=e.target.closest('[data-day]');
  if(dayButton){day=dayButton.dataset.day;tab='Обзор';selectedTask='';show();window.scrollTo(0,0);return}
  const task=e.target.closest('[data-task]');
