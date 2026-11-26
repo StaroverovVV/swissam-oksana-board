@@ -18,6 +18,7 @@
 .audit-handoffs{display:grid;gap:8px}.audit-handoff{padding:12px 14px;border-radius:9px;border:1px solid #e1e9f2;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center;background:#fbfcfe}.audit-handoff>div:first-child{display:grid;gap:4px}.audit-handoff small{color:#a28653;font-size:10px;font-weight:750}.audit-handoff strong{font-size:12px;line-height:1.45}.audit-references{display:flex;flex-wrap:wrap;gap:5px;align-items:center}.audit-link{display:inline-flex;text-align:left;align-items:center;border:1px solid #cbd8e9;background:#f0f5fb;color:#285c92;padding:7px 9px;border-radius:7px;font-size:11px;font-weight:650;line-height:1.4;margin:3px 3px 3px 0}.audit-link:hover{background:#dce9f7}.audit-missing{display:grid;gap:7px}.audit-missing-row{display:flex;justify-content:space-between;align-items:center;gap:9px;border:1px solid #ebdfc9;background:#fffaf2;border-radius:9px;padding:11px 13px;text-align:left}.audit-missing-row span{font-size:12px;color:#514a3c}.audit-missing-row small{color:#a0844e;font-size:11px;white-space:nowrap}.audit-note{margin-top:18px;border-top:1px solid #e7edf4;padding-top:16px;font-size:12px;color:#72829c;line-height:1.8}.audit-note strong{color:#425773}.audit-evidence{font-size:11px;color:#7b8b9e;margin:9px 0}.audit-next{font-size:12px;line-height:1.6;margin-top:14px;border-top:1px solid #e3eaf2;padding-top:12px;color:#536782}.audit-pending{font-size:12px;line-height:1.65;margin-top:13px;background:#fff5e5;border-left:3px solid #d0aa62;padding:11px 13px;color:#896b38}
 @media(max-width:850px){.audit-closed{grid-template-columns:1fr}.audit-handoff{grid-template-columns:1fr}}@media(max-width:560px){.audit-overview{padding:16px}.audit-triple{grid-template-columns:1fr}.audit-missing-row{display:block}.audit-missing-row small{display:block;margin-top:8px}}
 
+.audit-subnote{font-size:11px;color:#7a8da5;line-height:1.5;margin:4px 0 0}
 </style></head><body>
 <div id="app"><div class="locked"><h1>Закрытая панель SWISSAM</h1><p>Подключаем защищённые данные…</p></div></div>
 <script>
@@ -105,7 +106,7 @@ function closureAndCarryReport(){
  out+='<div class="audit-closed">'+closed.map(linkRow).join('')+'</div>';
  out+='<div class="audit-heading" style="margin-top:26px"><h2>Что перешло на 26 ноября</h2><p>Только совпадающие незавершённые задачи, не всякое продолжение темы.</p></div>';
  out+='<div class="audit-handoffs">';
- out+=reflected.map(t=>'<div class="audit-handoff"><div><small>'+esc(t.project)+' · '+esc(t.status==='progress'?'В работе':'Открыто')+'</small><strong>'+esc(t.title)+'</strong></div><div class="audit-references">'+t.carryTo26.map(linkTo26).join('')+'</div></div>').join('');
+ out+=reflected.map(t=>'<div class="audit-handoff"><div><small>'+esc(t.project)+' · '+esc(t.carryCoverage==='partial'?'Частично отражено в плане':t.status==='progress'?'В работе':'Открыто')+'</small><strong>'+esc(t.title)+'</strong><p class="audit-subnote">'+esc(t.carryNote||'')+'</p></div><div class="audit-references">'+t.carryTo26.map(linkTo26).join('')+'</div></div>').join('');
  out+='</div>';
  out+='<div class="audit-heading" style="margin-top:24px"><h2>Осталось открытым — нет отдельной задачи на 26 ноября</h2></div>';
  out+='<div class="audit-missing">'+unlinked.map(t=>'<button class="audit-missing-row" data-task="'+esc(t.id)+'"><span><b>'+esc(t.project)+'</b> · '+esc(t.title)+'</span><small>Перенос не подтверждён ↗</small></button>').join('')+'</div>';
@@ -122,8 +123,8 @@ function carryFromYesterday(){
  const prev=previousItems().filter(t=>t.status!=='done');
  const represented=prev.filter(t=>t.carryTo26?.some(id=>todayTask(id)));
  const notIncluded=prev.filter(t=>!t.carryTo26?.some(id=>todayTask(id)));
- let s='<section class="audit-overview"><div class="audit-heading"><h2>Переход с 25 на 26 ноября</h2><p>5 открытых задач отражены в плане 26 ноября. Ещё 2 не перенесены отдельными пунктами.</p></div>';
- s+='<div class="audit-handoffs">'+represented.map(t=>'<div class="audit-handoff"><div><small>'+esc(t.project)+'</small><strong>'+esc(t.title)+'</strong></div><div class="audit-references">'+t.carryTo26.map(linkTo26).join('')+'</div></div>').join('')+'</div>';
+ let s='<section class="audit-overview"><div class="audit-heading"><h2>Переход с 25 на 26 ноября</h2><p>Из 7 незакрытых задач: 3 отражены полностью, 2 частично и ещё 2 не представлены в плане 26 ноября.</p></div>';
+ s+='<div class="audit-handoffs">'+represented.map(t=>'<div class="audit-handoff"><div><small>'+esc(t.project)+(t.carryCoverage==='partial'?' · Частично':' · Отражено')+'</small><strong>'+esc(t.title)+'</strong><p class="audit-subnote">'+esc(t.carryNote||'')+'</p></div><div class="audit-references">'+t.carryTo26.map(linkTo26).join('')+'</div></div>').join('')+'</div>';
  s+='<div class="audit-heading" style="margin-top:20px"><h3>Открыто, но в сегодняшнем плане не отражено</h3></div>';
  s+='<div class="audit-missing">'+notIncluded.map(t=>'<button class="audit-missing-row" data-backtask="'+esc(t.id)+'"><span><b>'+esc(t.project)+'</b> · '+esc(t.title)+'</span><small>Срок не назначен ↗</small></button>').join('')+'</div>';
  s+='<div class="audit-note">Встреча с Реной 26 ноября и согласование календаря Маркетинга — следующие действия после закрытых 25 ноября контакта и обсуждения, а не перенос незавершённой задачи.</div>';
