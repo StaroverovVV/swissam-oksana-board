@@ -10,6 +10,9 @@
 .project-goals{margin-top:16px}.project-goals .program-links{margin-top:19px}.task-group{margin-bottom:19px}.task-group-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}.task-group-head h3{font-size:15px;margin:0;font-weight:750}.task-group-head span:last-child{font-size:11px;color:#8797ac}.task-list{background:#fff;border:1px solid #e2e9f2;border-radius:12px;padding:0 17px}.task{border-bottom:1px solid #ebeff5}.task:last-child{border-bottom:0}.task>summary{list-style:none;cursor:pointer;display:flex;gap:12px;justify-content:space-between;align-items:center;padding:16px 2px}.task>summary::-webkit-details-marker{display:none}.task-summary-left{flex:1;min-width:0}.task-prio{font-size:10px;font-weight:700;display:inline-block;color:#6b7e99;border-radius:5px;padding:4px 7px;margin-bottom:7px;background:#eef3f9}.task-prio.urgent{background:#fff0e3;color:#9b6b3b}.task-prio.important{background:#eaf2fc;color:#416c9b}.task-prio.attention{background:#fcf2dd;color:#9d7a2b}.task-name{font-size:14px;font-weight:700;color:#2d4360}.task-source{display:inline-block;font-size:11px;color:#90a0b3;margin-top:6px}.task-chevron{color:#7c90ad;font-size:19px}.task[open] .task-chevron{transform:rotate(180deg)}.task-body{background:#f8fafc;border-top:1px solid #eaf0f6;border-radius:0 0 8px 8px;padding:14px 15px 17px;color:#5a6c85}.task-body>p{font-size:13px;line-height:1.6;margin:0 0 12px}.task-origin{font-size:11px;color:#899ab1;line-height:1.5}.task-result{margin-top:15px;border-left:3px solid #b1c4d9;padding:8px 12px;background:white}.task-result strong{font-size:11px;color:#47607e}.task-result p{margin:5px 0 0;font-size:12px;color:#6b7f9b;white-space:pre-wrap}.events .event{display:block;text-align:left;width:100%;background:none;border:0;border-bottom:1px solid #e9edf5;cursor:pointer}.events .event:hover{background:#f9fbfe}.events .event:last-child{border-bottom:0}
 @media(max-width:1100px){.priority-grid{grid-template-columns:1fr 1fr}.priority-column.attention{grid-column:1/-1}}@media(max-width:690px){.priority-grid{grid-template-columns:1fr}.priority-column.attention{grid-column:auto}.priority-intro{display:block}.priority-intro button{margin-top:11px}.task>summary{align-items:flex-start}.task>summary .state{margin:0}.task-chevron{display:none}}
 
+
+.day-tabs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:17px}.day-tabs button{border:1px solid #d7e2ef;border-radius:9px;background:#fff;padding:9px 14px;color:#4a678e;font-size:12px;font-weight:750}.day-tabs button.active{border-color:#1e416c;background:#1e416c;color:#fff}.day-tabs span{font-size:11px;color:#8496ac;margin-left:auto}.archive-source{background:#fff;border:1px solid #eadfc8;border-left:3px solid #bf9b61;border-radius:10px;padding:13px 18px;margin:14px 0 19px;color:#4a5f7b}.archive-source strong{font-size:13px}.archive-source p{font-size:12px;margin:5px 0 0;color:#8190a8;line-height:1.6}
+@media(max-width:690px){.day-tabs span{margin-left:0;width:100%;padding-top:2px}}
 </style></head><body>
 <div id="app"><div class="locked"><h1>Закрытая панель SWISSAM</h1><p>Подключаем защищённые данные…</p></div></div>
 <script>
@@ -22,7 +25,10 @@ const lanes=[
  {id:'important',name:'Важно, не срочно',desc:'Разработка и развитие программ',color:'important'},
  {id:'attention',name:'Требует внимания',desc:'Открытые решения и зависимости',color:'attention'}
 ];
-let data,tab='Обзор',selectedTask='';
+let data,tab='Обзор',selectedTask='',day='2026-11-26';
+const dayItems=()=>day==='2026-11-25'?(data.historyDays?.['2026-11-25']?.items||[]):data.items;
+const dayText=()=>day==='2026-11-25'?'25 ноября 2026':'26 ноября 2026';
+const archive=()=>day==='2026-11-25';
 const plural=(n,one,two,five)=>n%10===1&&n%100!==11?one:n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?two:five;
 function locked(msg){node.innerHTML='<div class="locked"><h1>Доступ к отчёту</h1><p>'+esc(msg)+'</p><p>Откройте полную ссылку, полученную от руководителя ДПО.</p></div>'}
 const active=t=>t.status!=='done';
@@ -61,24 +67,25 @@ function priorityBoard(short=false){
  if(short)s+='<button data-tab="Приоритеты">Все приоритеты ↗</button>';
  s+='</div><div class="priority-grid">';
  s+=lanes.map(l=>{
-  const items=data.items.filter(t=>prio(t).id===l.id&&active(t));
+  const items=dayItems().filter(t=>prio(t).id===l.id&&active(t));
   const displayed=short?items.slice(0,3):items;
   return '<section class="priority-column '+l.color+'"><header><div class="priority-col-title"><span class="task-lane-mark '+l.color+'"></span><h3>'+esc(l.name)+'</h3></div><span class="priority-count">'+items.length+'</span></header><p class="priority-desc">'+esc(l.desc)+'</p><div class="priority-rows">'+displayed.map(t=>'<button data-task="'+esc(t.id)+'"><small>'+esc(t.project)+'</small><span>'+esc(t.title)+'</span><b>↗</b></button>').join('')+(items.length===0?'<p class="priority-empty">Активных задач нет</p>':'')+'</div>'+(short&&items.length>displayed.length?'<button class="priority-more" data-tab="Приоритеты">Ещё '+(items.length-displayed.length)+' ↗</button>':'')+'</section>';
  }).join('');
  return s+'</div>'
 }
 function projectCard(x,i){
- const count=data.items.filter(t=>t.project===x.code).length;
+ const count=dayItems().filter(t=>t.project===x.code).length;
  return '<article class="card project-card"><div class="card-topline"><span class="num">0'+(i+1)+'</span><span class="project-task-count">'+count+' '+plural(count,'задача','задачи','задач')+'</span></div><button class="card-open" data-tab="'+esc(x.code)+'"><h3>'+esc(x.name)+'</h3><p>'+esc(x.description)+'</p><span class="card-open-hint">Посмотреть задачи и результаты →</span></button>'+siteLinks(x)+'</article>'
 }
 function show(){
  const p=data.projects.find(x=>x.code===tab);
  const isPriority=tab==='Приоритеты';
- const name=p?.name|| (tab==='Встречи'?'Встречи и обучение':isPriority?'Матрица приоритетов':'Программы и результаты');
- const items=data.items.filter(x=>tab==='Обзор'||(tab==='Встречи'&&['Продажи','HM'].includes(x.project))||x.project===tab);
- let s='<div class="layout"><aside class="aside"><div class="brand"><i>S</i><span>SWISSAM<small>Управление ДПО</small></span></div><div class="aside-label">РАБОЧЕЕ ПРОСТРАНСТВО</div><nav>'+['Обзор','Приоритеты',...data.projects.map(x=>x.code),'Встречи'].map(x=>'<button data-tab="'+esc(x)+'" class="'+(tab===x?'active':'')+'">'+esc(x==='Обзор'?'Обзор дня':x==='Встречи'?'Дополнительно':x==='Приоритеты'?'Приоритеты задач':data.projects.find(z=>z.code===x)?.name)+'</button>').join('')+'</nav><div class="aside-foot">Управленческий отчёт<br>Только просмотр</div></aside><div class="main"><div class="top"><span>SWISSAM / ДПО / '+esc(tab)+'</span><span>26 ноября 2026</span></div><div class="content"><div class="hero"><div><span class="caps">УПРАВЛЕНЧЕСКИЙ РАДАР · 26 НОЯБРЯ</span><h1>'+esc(name)+'</h1><p>'+esc(p?.description|| (isPriority?'Какие задачи важны сейчас, какие требуют системной работы, а где необходимы решения.':'Что запланировано, каких результатов ожидаем и что фактически выполнено.'))+'</p></div><div class="calendar"><strong>26</strong><small>НОЯ 2026</small></div></div>';
- const stats=[['ПРОЕКТА',data.projects.length],['ЗАДАЧИ',data.items.length],['ВАЖНО И СРОЧНО',data.items.filter(t=>t.lane==='urgent'&&active(t)).length],['ТРЕБУЕТ ВНИМАНИЯ',data.items.filter(t=>t.lane==='attention'&&active(t)).length]];
+ const name=p?.name|| (tab==='Встречи'?'Дополнительные задачи ДПО и встречи':isPriority?'Матрица приоритетов':'Программы и результаты');
+ const items=dayItems().filter(x=>tab==='Обзор'||(tab==='Встречи'&&['Продажи','HM','ДПО'].includes(x.project))||x.project===tab);
+ let s='<div class="layout"><aside class="aside"><div class="brand"><i>S</i><span>SWISSAM<small>Управление ДПО</small></span></div><div class="aside-label">РАБОЧЕЕ ПРОСТРАНСТВО</div><nav>'+['Обзор','Приоритеты',...data.projects.map(x=>x.code),'Встречи'].map(x=>'<button data-tab="'+esc(x)+'" class="'+(tab===x?'active':'')+'">'+esc(x==='Обзор'?'Обзор дня':x==='Встречи'?'Дополнительно':x==='Приоритеты'?'Приоритеты задач':data.projects.find(z=>z.code===x)?.name)+'</button>').join('')+'</nav><div class="aside-foot">Управленческий отчёт<br>Только просмотр</div></aside><div class="main"><div class="top"><span>SWISSAM / ДПО / '+esc(tab)+'</span><span>'+esc(dayText())+'</span></div><div class="content"><div class="day-tabs" role="group" aria-label="Дата задач"><button data-day="2026-11-26" class="'+(!archive()?'active':'')+'">26 ноября · сегодня</button><button data-day="2026-11-25" class="'+(archive()?'active':'')+'">25 ноября · вчера</button><span>Разные даты, отдельные статусы</span></div><div class="hero"><div><span class="caps">УПРАВЛЕНЧЕСКИЙ РАДАР · '+(archive()?'25':'26')+' НОЯБРЯ</span><h1>'+esc(name)+'</h1><p>'+esc(p?.description|| (isPriority?'Какие задачи важны сейчас, какие требуют системной работы, а где необходимы решения.':'Что запланировано, каких результатов ожидаем и что фактически выполнено.'))+'</p></div><div class="calendar"><strong>'+(archive()?'25':'26')+'</strong><small>НОЯ 2026</small></div></div>';
+ const stats=archive()?[['ПРОЕКТА',data.projects.length],['ЗАДАЧИ',dayItems().length],['ЗАФИКСИРОВАНО',dayItems().filter(t=>t.status==='done').length],['ОТКРЫТО',dayItems().filter(active).length]]:[['ПРОЕКТА',data.projects.length],['ЗАДАЧИ',dayItems().length],['ВАЖНО И СРОЧНО',dayItems().filter(t=>t.lane==='urgent'&&active(t)).length],['ТРЕБУЕТ ВНИМАНИЯ',dayItems().filter(t=>t.lane==='attention'&&active(t)).length]];
  s+='<div class="kpis">'+stats.map(x=>'<div class="kpi"><span>'+esc(x[0])+'</span><b>'+String(x[1]).padStart(2,'0')+'</b></div>').join('')+'</div>';
+ if(archive()&&tab==='Обзор')s+='<div class="archive-source"><strong>Восстановлено по источникам за 25 ноября</strong><p>'+esc(data.historyDays?.['2026-11-25']?.source_note||'Статусы сформированы по подтверждённым действиям и открытым задачам.')+'</p></div>';
  if(tab==='Обзор'){
   s+=priorityBoard(true);
   s+='<div class="section"><h2>Программы ДПО</h2><span>Нажмите программу, чтобы увидеть задачи</span></div><div class="cards">'+data.projects.map(projectCard).join('')+'</div>';
@@ -89,11 +96,11 @@ function show(){
   s+='<div class="section"><h2>Задачи программы</h2><span>'+items.length+' '+plural(items.length,'задача','задачи','задач')+'</span></div>';
   s+=groupedTasks(items);
  }else if(tab==='Встречи'){
-  const meetings=data.items.filter(x=>['Продажи','HM'].includes(x.project));
-  s+='<div class="section"><h2>Встречи и обучение</h2><span>'+meetings.length+' записи</span></div>'+groupedTasks(meetings);
+  const meetings=dayItems().filter(x=>['Продажи','HM','ДПО'].includes(x.project));
+  s+='<div class="section"><h2>Дополнительные задачи ДПО и встречи</h2><span>'+meetings.length+' записи</span></div>'+groupedTasks(meetings);
  }else if(tab==='Обзор'){
-  const events=data.items.filter(x=>['gm-anna','gm-ikon','ls-teacher','sales-rena','digital-dmitry','hm-class'].includes(x.id));
-  s+='<div class="section"><h2>Шесть событий дня</h2><span>26 ноября · исходный план</span></div><div class="box events">';
+  const events=archive()?dayItems().filter(x=>['y25-gm-julia','y25-ls-denis','y25-market-rotation','y25-digital-audit','y25-sales-rena','y25-dpo-spa'].includes(x.id)):dayItems().filter(x=>['gm-anna','gm-ikon','ls-teacher','sales-rena','digital-dmitry','hm-class'].includes(x.id));
+  s+='<div class="section"><h2>'+(archive()?'Основные действия 25 ноября':'Шесть событий дня')+'</h2><span>'+(archive()?'По записи и переписке':'26 ноября · исходный план')+'</span></div><div class="box events">';
   s+=events.map(x=>'<button class="event" data-task="'+esc(x.id)+'"><div class="event-main"><div><span class="tag">'+esc(x.project)+'</span><h3>'+esc(x.title)+'</h3><p>'+esc(x.detail)+'</p></div><span class="state '+esc(x.status)+'">'+esc(statusNames[x.status]||'Статус не подтверждён')+'</span></div></button>').join('');
   s+='</div>';
  }
@@ -102,8 +109,10 @@ function show(){
  if(selectedTask){const details=document.getElementById('task-'+selectedTask);if(details){details.open=true;details.scrollIntoView({behavior:'smooth',block:'center'})}}
 }
 node.addEventListener('click',e=>{
+ const dayButton=e.target.closest('[data-day]');
+ if(dayButton){day=dayButton.dataset.day;tab='Обзор';selectedTask='';show();window.scrollTo(0,0);return}
  const task=e.target.closest('[data-task]');
- if(task){const t=data.items.find(x=>x.id===task.dataset.task);if(!t)return;tab=['Продажи','HM'].includes(t.project)?'Встречи':t.project;selectedTask=t.id;show();return}
+ if(task){const t=dayItems().find(x=>x.id===task.dataset.task);if(!t)return;tab=['Продажи','HM','ДПО'].includes(t.project)?'Встречи':t.project;selectedTask=t.id;show();return}
  const b=e.target.closest('[data-tab]');
  if(b){tab=b.dataset.tab;selectedTask='';show();window.scrollTo(0,0)}
 });
