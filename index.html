@@ -7,6 +7,7 @@
 <script>
 const node=document.getElementById('app'),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),from64=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-s.length%4)%4)),x=>x.charCodeAt(0));
 let data,tab='Обзор';
+const points=n=>n===1?'пункт результата':n>=2&&n<=4?'пункта результата':'пунктов результата';
 const statusNames={plan:'Запланировано',progress:'В работе',done:'Выполнено',blocked:'Нужно решение'};
 function locked(msg){node.innerHTML='<div class="locked"><h1>Доступ к отчёту</h1><p>'+esc(msg)+'</p><p>Откройте полную ссылку, полученную от руководителя ДПО.</p></div>'}
 function show(){
